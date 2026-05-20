@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d3d2b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Patroli Hutan</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --hijau: #0d3d2b;
+    --hijau-mid: #1D9E75;
+    --hijau-light: #5DCAA5;
+    --hijau-pale: #EAF3DE;
+    --amber: #EF9F27;
+    --merah: #E24B4A;
+    --bg: #f4f6f2;
+    --card: #ffffff;
+    --text: #1a2e22;
+    --text-muted: #6b7c6f;
+    --border: #d4ddd7;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; font-family: 'Georgia', serif; background: var(--bg); color: var(--text); }
+
+  /* HEADER */
+  .header {
+    background: var(--hijau);
+    color: #fff;
+    padding: 14px 16px 12px;
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .header-icon { font-size: 22px; }
+  .header-title { font-size: 17px; font-weight: bold; letter-spacing: 0.3px; }
+  .header-sub { font-size: 11px; opacity: 0.7; font-family: sans-serif; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: var(--hijau);
+    padding: 0 12px 12px;
+    gap: 8px;
+    position: sticky; top: 60px; z-index: 99;
+  }
+  .tab-btn {
+    flex: 1; padding: 9px 4px; border: none; border-radius: var(--radius-sm);
+    font-size: 12px; font-family: sans-serif; font-weight: 600; cursor: pointer;
+    background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7);
+    letter-spacing: 0.3px; transition: all 0.2s;
+  }
+  .tab-btn.active { background: var(--hijau-mid); color: #fff; }
+
+  /* CONTENT */
+  .content { padding: 14px; max-width: 500px; margin: 0 auto; }
+
+  .panel { display: none; } .panel.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 14px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 12px; font-family: sans-serif; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+  }
+  .card-title span { font-size: 15px; }
+
+  /* FORM */
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; font-family: sans-serif; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 11px 12px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 15px; font-family: sans-serif; background: var(--bg);
+    color: var(--text); outline: none; transition: border 0.2s;
+    -webkit-appearance: none; appearance: none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--hijau-mid); background: #fff; }
+  .field textarea { resize: none; min-height: 80px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* KAMERA */
+  .kamera-area {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 16px; text-align: center; background: var(--bg);
+    margin-bottom: 12px; cursor: pointer;
+  }
+  .kamera-area.has-foto { border-color: var(--hijau-mid); background: var(--hijau-pale); }
+  .kamera-icon { font-size: 36px; margin-bottom: 6px; }
+  .kamera-label { font-size: 13px; font-family: sans-serif; color: var(--text-muted); }
+  #foto-preview { width: 100%; border-radius: var(--radius-sm); margin-top: 10px; display: none; max-height: 200px; object-fit: cover; }
+  #foto-input { display: none; }
+
+  /* FOTO THUMBS */
+  .foto-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .foto-thumb-wrap { position: relative; }
+  .foto-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+  .foto-thumb-del { position: absolute; top: -5px; right: -5px; background: var(--merah); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; font-family: sans-serif; line-height: 20px; text-align: center; }
+  .btn-kamera-add { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: sans-serif; cursor: pointer; color: var(--text-muted); margin-top: 8px; }
+
+  /* TOMBOL SIMPAN */
+  .btn-simpan {
+    width: 100%; padding: 15px; background: var(--hijau);
+    color: #fff; border: none; border-radius: var(--radius);
+    font-size: 16px; font-family: 'Georgia', serif; font-weight: bold;
+    cursor: pointer; margin-top: 4px; letter-spacing: 0.3px;
+    transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-simpan:active { background: var(--hijau-mid); transform: scale(0.98); }
+
+  /* ALERT */
+  .alert {
+    padding: 12px 14px; border-radius: var(--radius-sm);
+    font-size: 13px; font-family: sans-serif; margin-bottom: 12px;
+    display: none; align-items: center; gap: 8px;
+  }
+  .alert.sukses { background: var(--hijau-pale); color: #27500A; display: flex; }
+  .alert.gagal { background: #FCEBEB; color: #A32D2D; display: flex; }
+
+  /* STATISTIK */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px 12px; text-align: center; }
+  .stat-num { font-size: 28px; font-weight: bold; line-height: 1; }
+  .stat-lbl { font-size: 11px; font-family: sans-serif; color: var(--text-muted); margin-top: 4px; }
+
+  /* FILTER */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0; padding: 6px 12px; border: 1px solid var(--border);
+    border-radius: 20px; font-size: 12px; font-family: sans-serif;
+    background: var(--card); color: var(--text-muted); cursor: pointer;
+  }
+  .filter-chip.active { background: var(--hijau); color: #fff; border-color: var(--hijau); }
+
+  /* LIST ITEM */
+  .item-card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 14px;
+    margin-bottom: 10px; cursor: pointer; transition: border-color 0.2s;
+  }
+  .item-card:active { border-color: var(--hijau-mid); }
+  .item-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .item-tanggal { font-size: 12px; font-family: sans-serif; color: var(--text-muted); }
+  .item-lokasi { font-size: 15px; font-weight: bold; }
+  .item-petugas { font-size: 13px; font-family: sans-serif; color: var(--text-muted); margin-top: 2px; }
+  .item-footer { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+  .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-family: sans-serif; font-weight: 600; }
+  .badge-aman { background: #EAF3DE; color: #27500A; }
+  .badge-waspada { background: #FAEEDA; color: #633806; }
+  .badge-darurat { background: #FCEBEB; color: #791F1F; }
+  .badge-temuan { background: #FCEBEB; color: #791F1F; }
+  .badge-normal { background: var(--bg); color: var(--text-muted); }
+
+  /* DETAIL MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 200;
+    align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: var(--radius) var(--radius) 0 0;
+    width: 100%; max-width: 500px; max-height: 85vh;
+    overflow-y: auto; padding: 20px 16px;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-title { font-size: 17px; font-weight: bold; }
+  .modal-close { background: var(--bg); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--text-muted); font-family: sans-serif; }
+  .modal-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--bg); font-size: 14px; font-family: sans-serif; }
+  .modal-row:last-of-type { border-bottom: none; }
+  .modal-key { color: var(--text-muted); }
+  .modal-val { font-weight: 600; text-align: right; max-width: 60%; }
+  .modal-ket { margin-top: 12px; padding: 12px; background: var(--bg); border-radius: var(--radius-sm); font-size: 14px; font-family: sans-serif; line-height: 1.5; }
+  .modal-fotos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .modal-foto-img { width: calc(33.33% - 6px); aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-sm); cursor: pointer; }
+  .btn-hapus-modal {
+    width: 100%; margin-top: 14px; padding: 12px;
+    background: #FCEBEB; color: #A32D2D; border: none;
+    border-radius: var(--radius-sm); font-size: 14px; font-family: sans-serif; font-weight: 600; cursor: pointer;
+  }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-family: sans-serif; }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* EXPORT */
+  .btn-export {
+    width: 100%; padding: 12px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 14px; font-family: sans-serif; font-weight: 600;
+    color: var(--text); cursor: pointer; margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-export:active { background: var(--border); }
+
+  /* FOTO FULLSCREEN */
+  .foto-fs { display: none; position: fixed; inset: 0; background: #000; z-index: 300; align-items: center; justify-content: center; }
+  .foto-fs.open { display: flex; }
+  .foto-fs img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .foto-fs-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.2); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; font-family: sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🌿</div>
+  <div>
+    <div class="header-title">Patroli Perlindungan Hutan</div>
+    <div class="header-sub">Sistem Pencatatan Lapangan Offline</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('input')">📝 Input Patroli</button>
+  <button class="tab-btn" onclick="switchTab('data')">📋 Data</button>
+  <button class="tab-btn" onclick="switchTab('ekspor')">📤 Ekspor</button>
+</div>
+
+<div class="content">
+
+  <!-- PANEL INPUT -->
+  <div id="panel-input" class="panel active">
+    <div id="alert-box" class="alert"></div>
+
+    <div class="card">
+      <div class="card-title"><span>📅</span> Informasi Patroli</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Tanggal</label>
+          <input type="date" id="tgl">
+        </div>
+        <div class="field">
+          <label>No. Patroli</label>
+          <input type="text" id="no_patroli" placeholder="P-001">
+        </div>
+      </div>
+      <div class="field">
+        <label>Nama Petugas</label>
+        <input type="text" id="petugas" placeholder="Nama lengkap petugas">
+      </div>
+      <div class="field">
+        <label>Lokasi / Blok</label>
+        <input type="text" id="lokasi" placeholder="Contoh: Blok A3, Resort Martapura">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Jam Mulai</label>
+          <input type="time" id="jam_mulai">
+        </div>
+        <div class="field">
+          <label>Jam Selesai</label>
+          <input type="time" id="jam_selesai">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Luas Area (ha)</label>
+          <input type="number" id="luas" placeholder="0" min="0" step="0.1">
+        </div>
+        <div class="field">
+          <label>Jml Anggota</label>
+          <input type="number" id="anggota" placeholder="1" min="1" value="1">
+        </div>
+      </div>
+      <div class="field">
+        <label>Koordinat GPS (opsional)</label>
+        <input type="text" id="gps" placeholder="Contoh: -3.1234, 114.5678">
+        <p style="font-size:11px;color:var(--text-muted);margin-top:5px;font-family:sans-serif;">Copy dari Google Maps → tahan lokasi di peta → salin koordinat</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>⚠️</span> Temuan & Kondisi</div>
+      <div class="field">
+        <label>Temuan / Pelanggaran</label>
+        <select id="temuan">
+          <option value="Tidak ada temuan">Tidak ada temuan</option>
+          <option value="Penebangan liar">Penebangan liar</option>
+          <option value="Perambahan hutan">Perambahan hutan</option>
+          <option value="Kebakaran hutan">Kebakaran hutan</option>
+          <option value="Perburuan liar">Perburuan liar</option>
+          <option value="Pertambangan ilegal">Pertambangan ilegal</option>
+          <option value="Pembalakan liar">Pembalakan liar</option>
+          <option value="Lainnya">Lainnya</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Status Kondisi Hutan</label>
+        <select id="status">
+          <option value="Aman">🟢 Aman</option>
+          <option value="Waspada">🟡 Waspada</option>
+          <option value="Darurat">🔴 Darurat</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Keterangan & Tindak Lanjut</label>
+        <textarea id="ket" placeholder="Deskripsikan temuan, kondisi hutan, tindakan yang diambil, atau catatan penting lainnya..."></textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>📷</span> Foto Dokumentasi</div>
+      <div id="foto-thumbs" class="foto-thumbs"></div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn-kamera-add" onclick="document.getElementById('foto-kamera').click()" style="flex:1;justify-content:center">
+          📷 Kamera
+        </button>
+        <button class="btn-kamera-add" onclick="document.getElementById('foto-galeri').click()" style="flex:1;justify-content:center">
+          🖼️ Galeri
+        </button>
+      </div>
+      <input type="file" id="foto-kamera" accept="image/*" capture="environment" multiple onchange="handleFoto(event)">
+      <input type="file" id="foto-galeri" accept="image/*" multiple onchange="handleFoto(event)">
+      <p style="font-size:11px;color:var(--text-muted);margin-top:8px;font-family:sans-serif;">Bisa tambah beberapa foto sekaligus dari kamera atau galeri.</p>
+    </div>
+
+    <button class="btn-simpan" onclick="simpan()">💾 Simpan Data Patroli</button>
+    <div style="height:20px"></div>
+  </div>
+
+  <!-- PANEL DATA -->
+  <div id="panel-data" class="panel">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num" id="s-total" style="color:var(--hijau)">0</div>
+        <div class="stat-lbl">Total Patroli</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="s-bulan" style="color:var(--hijau-mid)">0</div>
+        <div class="stat-lbl">Bulan Ini</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="s-temuan" style="color:var(--merah)">0</div>
+        <div class="stat-lbl">Pelanggaran</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="s-luas" style="color:var(--amber)">0</div>
+        <div class="stat-lbl">Total Luas (ha)</div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-chip active" onclick="setFilter('all',this)">Semua</div>
+      <div class="filter-chip" onclick="setFilter('Aman',this)">🟢 Aman</div>
+      <div class="filter-chip" onclick="setFilter('Waspada',this)">🟡 Waspada</div>
+      <div class="filter-chip" onclick="setFilter('Darurat',this)">🔴 Darurat</div>
+      <div class="filter-chip" onclick="setFilter('temuan',this)">⚠️ Ada Temuan</div>
+    </div>
+
+    <div id="list-data"></div>
+    <div style="height:20px"></div>
+  </div>
+
+  <!-- PANEL EKSPOR -->
+  <div id="panel-ekspor" class="panel">
+    <div class="card">
+      <div class="card-title"><span>📊</span> Ekspor Data</div>
+      <p style="font-size:13px;font-family:sans-serif;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">Ekspor data patroli ke format CSV untuk dibuka di Excel atau Google Sheets.</p>
+      <button class="btn-export" onclick="exportCSV()">📥 Download CSV (Semua Data)</button>
+      <button class="btn-export" onclick="exportCSVBulanIni()">📥 Download CSV (Bulan Ini)</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>🗑️</span> Kelola Data</div>
+      <p style="font-size:13px;font-family:sans-serif;color:var(--text-muted);margin-bottom:14px;line-height:1.5;">Hapus semua data patroli dari perangkat. <strong>Tidak bisa dibatalkan.</strong></p>
+      <button class="btn-export" onclick="hapusSemua()" style="color:var(--merah);border-color:var(--merah);">🗑️ Hapus Semua Data</button>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>ℹ️</span> Informasi Aplikasi</div>
+      <div style="font-size:13px;font-family:sans-serif;color:var(--text-muted);line-height:1.8;">
+        <div>Versi: 1.0</div>
+        <div>Penyimpanan: Browser lokal (offline)</div>
+        <div>Data tersimpan di perangkat ini</div>
+        <div id="info-jumlah"></div>
+      </div>
+    </div>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+<!-- MODAL DETAIL -->
+<div class="modal-overlay" id="modal-overlay" onclick="tutupModal(event)">
+  <div class="modal" id="modal-content">
+    <div class="modal-header">
+      <div class="modal-title" id="m-lokasi">-</div>
+      <button class="modal-close" onclick="tutupModal()">✕</button>
+    </div>
+    <div id="m-body"></div>
+    <div class="modal-fotos" id="m-fotos"></div>
+    <button class="btn-hapus-modal" onclick="hapusItem()">🗑️ Hapus Data Ini</button>
+  </div>
+</div>
+
+<!-- FOTO FULLSCREEN -->
+<div class="foto-fs" id="foto-fs" onclick="document.getElementById('foto-fs').classList.remove('open')">
+  <img id="foto-fs-img" src="">
+  <button class="foto-fs-close">✕</button>
+</div>
+
+<script>
+let db = JSON.parse(localStorage.getItem('patroli_db') || '[]');
+let fotoTemp = [];
+let filterAktif = 'all';
+let itemAktif = null;
+
+function save() { localStorage.setItem('patroli_db', JSON.stringify(db)); }
+
+function switchTab(t) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', ['input','data','ekspor'][i] === t));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + t).classList.add('active');
+  if (t === 'data') { updateStats(); renderList(); }
+  if (t === 'ekspor') { updateInfo(); }
+}
+
+// GPS manual - tidak perlu fungsi otomatis
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+// FOTO
+function handleFoto(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      fotoTemp.push(ev.target.result);
+      renderFotoTemp();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function renderFotoTemp() {
+  const wrap = document.getElementById('foto-thumbs');
+  wrap.innerHTML = fotoTemp.map((f, i) => `
+    <div class="foto-thumb-wrap">
+      <img class="foto-thumb" src="${f}">
+      <button class="foto-thumb-del" onclick="hapusFotoTemp(${i})">✕</button>
+    </div>`).join('');
+}
+
+function hapusFotoTemp(i) { fotoTemp.splice(i, 1); renderFotoTemp(); }
+
+// SIMPAN
+function simpan() {
+  const v = id => document.getElementById(id).value.trim();
+  if (!v('tgl') || !v('petugas') || !v('lokasi')) {
+    showAlert('Harap isi Tanggal, Petugas, dan Lokasi!', false); return;
+  }
+  const rec = {
+    id: Date.now(),
+    tgl: v('tgl'), no_patroli: v('no_patroli'), petugas: v('petugas'),
+    lokasi: v('lokasi'), luas: parseFloat(v('luas')) || 0,
+    jam_mulai: v('jam_mulai'), jam_selesai: v('jam_selesai'),
+    anggota: parseInt(document.getElementById('anggota').value) || 1,
+    gps: v('gps'), temuan: v('temuan'), status: v('status'), ket: v('ket'),
+    fotos: [...fotoTemp]
+  };
+  db.unshift(rec); save();
+  ['no_patroli','petugas','lokasi','luas','jam_mulai','jam_selesai','gps','ket'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('temuan').selectedIndex = 0;
+  document.getElementById('status').selectedIndex = 0;
+  document.getElementById('anggota').value = 1;
+  fotoTemp = []; renderFotoTemp();
+  showAlert('✅ Data patroli berhasil disimpan!', true);
+  window.scrollTo(0, 0);
+}
+
+function showAlert(msg, ok) {
+  const el = document.getElementById('alert-box');
+  el.textContent = msg; el.className = 'alert ' + (ok ? 'sukses' : 'gagal');
+  setTimeout(() => el.className = 'alert', 3000);
+}
+
+// STATS
+function updateStats() {
+  const now = new Date();
+  const bln = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('s-total').textContent = db.length;
+  document.getElementById('s-bulan').textContent = db.filter(d => d.tgl.startsWith(bln)).length;
+  document.getElementById('s-temuan').textContent = db.filter(d => d.temuan !== 'Tidak ada temuan').length;
+  document.getElementById('s-luas').textContent = db.reduce((a,d) => a + (d.luas||0), 0).toFixed(1);
+}
+
+// FILTER & LIST
+function setFilter(f, el) {
+  filterAktif = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function renderList() {
+  let rows = db.filter(d => {
+    if (filterAktif === 'all') return true;
+    if (filterAktif === 'temuan') return d.temuan !== 'Tidak ada temuan';
+    return d.status === filterAktif;
+  });
+  const el = document.getElementById('list-data');
+  if (!rows.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🌲</div><div>Belum ada data patroli</div></div>';
+    return;
+  }
+  el.innerHTML = rows.map(d => {
+    const badgeCls = d.status === 'Aman' ? 'badge-aman' : d.status === 'Waspada' ? 'badge-waspada' : 'badge-darurat';
+    const adaTemuan = d.temuan !== 'Tidak ada temuan';
+    return `<div class="item-card" onclick="bukaDetail(${d.id})">
+      <div class="item-head">
+        <div>
+          <div class="item-tanggal">${formatTgl(d.tgl)} ${d.no_patroli ? '· ' + d.no_patroli : ''}</div>
+          <div class="item-lokasi">${d.lokasi}</div>
+          <div class="item-petugas">👤 ${d.petugas} · ${d.anggota} orang</div>
+        </div>
+        ${d.fotos && d.fotos.length ? `<span style="font-size:18px">📷${d.fotos.length}</span>` : ''}
+      </div>
+      <div class="item-footer">
+        <span class="badge ${badgeCls}">${d.status}</span>
+        ${adaTemuan ? `<span class="badge badge-temuan">⚠️ ${d.temuan}</span>` : '<span class="badge badge-normal">Tidak ada temuan</span>'}
+        ${d.luas ? `<span style="font-size:11px;font-family:sans-serif;color:var(--text-muted)">${d.luas} ha</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function formatTgl(s) {
+  if (!s) return '-';
+  const [y,m,d] = s.split('-');
+  const bln = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+  return `${d} ${bln[parseInt(m)-1]} ${y}`;
+}
+
+// DETAIL MODAL
+function bukaDetail(id) {
+  const d = db.find(x => x.id === id);
+  if (!d) return;
+  itemAktif = id;
+  document.getElementById('m-lokasi').textContent = d.lokasi;
+  const badgeCls = d.status === 'Aman' ? 'badge-aman' : d.status === 'Waspada' ? 'badge-waspada' : 'badge-darurat';
+  document.getElementById('m-body').innerHTML = `
+    <div class="modal-row"><span class="modal-key">Tanggal</span><span class="modal-val">${formatTgl(d.tgl)}</span></div>
+    ${d.no_patroli ? `<div class="modal-row"><span class="modal-key">No. Patroli</span><span class="modal-val">${d.no_patroli}</span></div>` : ''}
+    <div class="modal-row"><span class="modal-key">Petugas</span><span class="modal-val">${d.petugas}</span></div>
+    <div class="modal-row"><span class="modal-key">Anggota Tim</span><span class="modal-val">${d.anggota} orang</span></div>
+    <div class="modal-row"><span class="modal-key">Jam Patroli</span><span class="modal-val">${d.jam_mulai||'-'} – ${d.jam_selesai||'-'}</span></div>
+    <div class="modal-row"><span class="modal-key">Luas Area</span><span class="modal-val">${d.luas ? d.luas + ' ha' : '-'}</span></div>
+    <div class="modal-row"><span class="modal-key">GPS</span><span class="modal-val" style="font-size:12px">${d.gps||'-'}</span></div>
+    <div class="modal-row"><span class="modal-key">Temuan</span><span class="modal-val">${d.temuan}</span></div>
+    <div class="modal-row"><span class="modal-key">Status</span><span class="modal-val"><span class="badge ${badgeCls}">${d.status}</span></span></div>
+    ${d.ket ? `<div class="modal-ket">📝 ${d.ket}</div>` : ''}
+  `;
+  const fotosEl = document.getElementById('m-fotos');
+  fotosEl.innerHTML = (d.fotos||[]).map(f => `<img class="modal-foto-img" src="${f}" onclick="lihatFoto('${f}')">`).join('');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function tutupModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+
+function hapusItem() {
+  if (!confirm('Hapus data patroli ini?')) return;
+  db = db.filter(d => d.id !== itemAktif);
+  save(); tutupModal(); updateStats(); renderList();
+}
+
+function lihatFoto(src) {
+  document.getElementById('foto-fs-img').src = src;
+  document.getElementById('foto-fs').classList.add('open');
+}
+
+// EKSPOR CSV
+function doExport(rows) {
+  if (!rows.length) { alert('Tidak ada data untuk diekspor.'); return; }
+  const header = 'No Patroli,Tanggal,Petugas,Lokasi,Luas (ha),Jam Mulai,Jam Selesai,Anggota,GPS,Temuan,Status,Keterangan,Jumlah Foto';
+  const csv = [header, ...rows.map(d =>
+    [d.no_patroli||'',d.tgl,d.petugas,d.lokasi,d.luas,d.jam_mulai,d.jam_selesai,d.anggota,d.gps,d.temuan,d.status,
+     `"${(d.ket||'').replace(/"/g,'""')}"`, (d.fotos||[]).length].join(',')
+  )].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = 'data_patroli_hutan.csv'; a.click();
+}
+
+function exportCSV() { doExport(db); }
+function exportCSVBulanIni() {
+  const now = new Date();
+  const bln = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  doExport(db.filter(d => d.tgl.startsWith(bln)));
+}
+
+function hapusSemua() {
+  if (!confirm('HAPUS semua data patroli? Tindakan ini tidak bisa dibatalkan!')) return;
+  db = []; save(); updateInfo(); alert('Semua data telah dihapus.');
+}
+
+function updateInfo() {
+  document.getElementById('info-jumlah').textContent = 'Jumlah data: ' + db.length + ' patroli';
+}
+
+// INIT
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('tgl').value = today;
+</script>
+</body>
+</html>
